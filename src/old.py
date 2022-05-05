@@ -7,7 +7,6 @@ from aws_lambda_powertools.utilities.idempotency import DynamoDBPersistenceLayer
 
 DYNAMODB_TABLE = environ["DYNAMODB_TABLE"]
 config = IdempotencyConfig(
-    function_timeout_clean_up=True,
     event_key_jmespath="uuid",
     use_local_cache=True,
     raise_on_no_idempotency_key=True,
@@ -17,11 +16,6 @@ persistence_layer = DynamoDBPersistenceLayer(table_name=DYNAMODB_TABLE, boto3_se
 
 
 @idempotent(persistence_store=persistence_layer, config=config)
-def timeout_handler(event, context):
-    time.sleep(4)
-    return {"message": str(uuid4())}
-
-
-@idempotent(persistence_store=persistence_layer, config=config)
 def handler(event, context):
+    time.sleep(4)
     return {"message": str(uuid4())}

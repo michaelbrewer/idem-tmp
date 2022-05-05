@@ -25,3 +25,9 @@ and execute the handler again.
 
 Testing happy flow: Update `src/app.py` line 21 to be `time.sleep(0.1)`. Then inoking will succeed and follow up
 invokes will return the original response.
+
+Test Cases:
+
+- `IdempotencyOldFunction` - Tests old behavior when a function times out and a inprogress record is created.
+- `IdempotencyTimeoutFunction` - Tests new option to clean up inprogress records after timeout.
+- `IdempotencyFunction` - Check happy path still works

@@ -2,8 +2,17 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Testing idempotency timeouts
 Globals:
-    Function:
-        Timeout: 2
+  Function:
+      Timeout: 2
+      Runtime: python3.9
+      MemorySize: 512
+      Layers: 
+        - !Ref PowertoolsLayer
+      Environment:
+        Variables:
+          LOG_LEVEL: INFO
+          POWERTOOLS_SERVICE_NAME: example
+          DYNAMODB_TABLE: !Ref IdempotencyTable
 
 Resources:
   IdempotencyTable:
@@ -20,24 +29,36 @@ Resources:
         Enabled: true
       BillingMode: PAY_PER_REQUEST
 
-  IdempotencyFunction:
+  IdempotencyOldFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: IdempotencyFunction
+      Description: Test for regular timeout which does not clean up
       CodeUri: src/
-      Handler: app.handler
-      Runtime: python3.9
-      MemorySize: 512
-      Layers: 
-        - !Ref PowertoolsLayer
+      Handler: old.handler
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref IdempotencyTable
-      Environment:
-        Variables:
-          LOG_LEVEL: INFO
-          POWERTOOLS_SERVICE_NAME: example
-          DYNAMODB_TABLE: !Ref IdempotencyTable
+
+
+  IdempotencyTimeoutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Test for clean up after timeout
+      CodeUri: src/
+      Handler: app.timeout_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref IdempotencyTable
+
+  IdempotencyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Test for no clean up needed
+      CodeUri: src/
+      Handler: app.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref IdempotencyTable
 
   PowertoolsLayer:
     Type: AWS::Serverless::LayerVersion
